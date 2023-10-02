@@ -12,6 +12,7 @@ jobs:
           node-version: '18.x'
       - run: npm install
       - run: npm run build 
+      
   test: 
     needs: build
     runs-on: ubuntu-latest
@@ -24,3 +25,59 @@ jobs:
           node-version: '18.x'
       - run: npm install
       - run: npm test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions: 
+      deployments: write
+      contents: write
+      statuses: write
+      actions: write
+      pages: write
+      id-token: write
+
+    steps:
+      - name: checkout repo 
+        uses: actions/checkout@v3
+        with: 
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: use node.js
+        uses: actions/setup-node@v3 
+        with: 
+          node-version: '18.x'
+
+      - run: npm install 
+      - run: npm run build 
+
+      # configure a runner generating a Nextjs static site
+      - name: configure GitHub pages
+        uses: actions/configure-pages@v3 
+        with:
+          static_site_generator: next
+          
+      # side note: according to TELUS, a simple three-environment structure
+      # is the recommended one. 
+      # 1. Development, 2. Testing (staging), and 3. Deployment(end user) environment. 
+        
+      - name: upload artifacts
+        uses: actions/upload-pages-artifact@v1
+        with: 
+          path: "./out"
+
+      - name: deploy
+        id: deployment
+        uses: actions/deploy-pages@v1
+
+
+
+
+
+
+
+
+
+
+
+  
